@@ -52,8 +52,8 @@ export function OrderBookPanel({
       <CardContent className="flex flex-col min-h-0 flex-1 p-0">
         <div className="grid grid-cols-3 px-4 py-0.5 text-xs font-semibold text-muted-foreground border-b border-border">
           <span>Price</span>
-          <span>Size</span>
-          <span>Total</span>
+          <span className="text-right">Size</span>
+          <span className="text-right">Total</span>
         </div>
         {asks && <PriceTable levels={asks} side="ask" />}
         <SpreadRow />
