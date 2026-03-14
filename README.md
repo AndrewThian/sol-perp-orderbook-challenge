@@ -9,14 +9,14 @@ npm install
 npm run dev
 ```
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start Vite dev server with HMR |
-| `npm run build` | Production build |
+| Command           | Description                    |
+| ----------------- | ------------------------------ |
+| `npm run dev`     | Start Vite dev server with HMR |
+| `npm run build`   | Production build               |
 | `npm run preview` | Serve production build locally |
-| `npm test` | Run Vitest in watch mode |
-| `npm run test:ci` | Single run with coverage |
-| `npm run prepush` | Typecheck + lint + format |
+| `npm test`        | Run Vitest in watch mode       |
+| `npm run test:ci` | Single run with coverage       |
+| `npm run prepush` | Typecheck + lint + format      |
 
 ## Architecture
 
