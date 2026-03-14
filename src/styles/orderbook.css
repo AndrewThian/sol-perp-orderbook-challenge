@@ -26,6 +26,22 @@
   color: #8b949e;
 }
 
+/* ─── Price table ─── */
+
+.price-table {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.price-table--bid {
+  flex-direction: column;
+}
+
+.price-table--ask {
+  flex-direction: column-reverse;
+}
+
 /* ─── Price row ─── */
 
 .price-row {
