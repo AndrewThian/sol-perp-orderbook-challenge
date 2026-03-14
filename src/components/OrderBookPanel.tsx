@@ -9,7 +9,7 @@ export function OrderBookPanel() {
   const { data: totals } = useTotalSizes()
 
   return (
-    <div className="orderbook-panel">
+    <div className="orderbook-panel flex-1 min-h-0">
       {/* Header */}
       <div className="orderbook-header">
         <span>SOL-PERP Order Book</span>

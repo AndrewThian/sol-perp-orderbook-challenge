@@ -6,7 +6,7 @@ export default function App() {
   const { status } = useOrderBookSubscription()
 
   return (
-    <div className="app">
+    <div className="flex h-screen flex-col bg-background text-foreground dark">
       <ConnectionStatus status={status} />
       <OrderBookPanel />
     </div>
