@@ -3,8 +3,6 @@ import { QUERY_KEY } from './useOrderBookSubscription'
 import { MAX_DISPLAY_LEVELS, OUTLIER_THRESHOLD } from '../constants'
 import type { OrderBookData } from '../lib/orderbook'
 
-// ─── Exported pure select functions (testable without React) ───
-
 export interface DisplayLevel {
   price: number
   size: number
@@ -55,8 +53,6 @@ export function selectTotalSizes(data: OrderBookData) {
     totalAskSize: [...data.asks.values()].reduce((s, v) => s + v, 0),
   }
 }
-
-// ─── Private helper ───
 
 function addCumulativeDepth(levels: [number, number][]): DisplayLevel[] {
   let cumulative = 0

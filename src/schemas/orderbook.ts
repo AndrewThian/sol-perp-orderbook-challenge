@@ -1,10 +1,8 @@
 import { z } from 'zod'
 
-// A single price level: [price, size]
 export const PriceLevelSchema = z.tuple([z.number(), z.number()])
 export type PriceLevel = z.infer<typeof PriceLevelSchema>
 
-// Snapshot — full state of the book
 export const SnapshotMessageSchema = z.object({
   type: z.literal('snapshot'),
   symbol: z.string(),
@@ -15,7 +13,6 @@ export const SnapshotMessageSchema = z.object({
 })
 export type SnapshotMessage = z.infer<typeof SnapshotMessageSchema>
 
-// Delta — incremental update
 export const DeltaMessageSchema = z.object({
   type: z.literal('delta'),
   symbol: z.string(),
@@ -27,8 +24,7 @@ export const DeltaMessageSchema = z.object({
 })
 export type DeltaMessage = z.infer<typeof DeltaMessageSchema>
 
-// Discriminated union for parsing any server message
-// We're using discriminated union here for zod O(1) check on the type attribute
+// zod discriminatedUnion gives O(1) dispatch on the type field
 export const ServerMessageSchema = z.discriminatedUnion('type', [
   SnapshotMessageSchema,
   DeltaMessageSchema,

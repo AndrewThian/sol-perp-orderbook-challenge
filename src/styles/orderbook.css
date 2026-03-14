@@ -1,5 +1,3 @@
-/* ─── Layout containers ─── */
-
 .orderbook-panel {
   display: flex;
   flex-direction: column;
@@ -35,8 +33,6 @@
   border-bottom: 1px solid #21262d;
 }
 
-/* ─── Price table ─── */
-
 .price-table {
   display: flex;
   flex-direction: column;
@@ -50,8 +46,6 @@
 .price-table--ask {
   flex-direction: column-reverse;
 }
-
-/* ─── Price row ─── */
 
 .price-row {
   display: grid;
@@ -121,8 +115,6 @@
   animation: row-flash-ask 300ms ease-out;
 }
 
-/* ─── Spread row ─── */
-
 .spread-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -136,8 +128,6 @@
   border-top: 1px solid #21262d;
   border-bottom: 1px solid #21262d;
 }
-
-/* ─── Text colors ─── */
 
 .price--bid {
   color: #10b981;
@@ -156,8 +146,6 @@
   text-align: right;
   color: #8b949e;
 }
-
-/* ─── Connection status dot ─── */
 
 .connection-dot {
   position: fixed;
