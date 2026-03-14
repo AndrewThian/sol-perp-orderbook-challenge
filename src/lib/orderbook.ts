@@ -28,8 +28,8 @@ export interface OrderBookData {
 
 export function buildBookFromSnapshot(msg: SnapshotMessage): OrderBookData {
   return {
-    bids: new Map(msg.bids), // [price, size][] → Map<number, number>
-    asks: new Map(msg.asks),
+    bids: new Map(msg.bids.filter(([, size]) => size !== 0)),
+    asks: new Map(msg.asks.filter(([, size]) => size !== 0)),
     sequence: msg.sequence,
     symbol: msg.symbol,
     lastUpdated: msg.timestamp,

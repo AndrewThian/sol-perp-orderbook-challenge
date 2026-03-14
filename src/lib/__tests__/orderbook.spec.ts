@@ -38,6 +38,25 @@ describe('buildBookFromSnapshot', () => {
     expect(book.symbol).toBe('SOL-PERP')
     expect(book.lastUpdated).toBe(snapshot.timestamp)
   })
+
+  it('excludes size=0 entries from snapshot', () => {
+    const snapshotWithZeros = SnapshotMessageSchema.parse({
+      ...snapshotSample,
+      bids: [[100, 5], [200, 0], [300, 10]],
+      asks: [[400, 0], [500, 3]],
+    })
+
+    const book = buildBookFromSnapshot(snapshotWithZeros)
+
+    expect(book.bids.size).toBe(2)
+    expect(book.bids.has(200)).toBe(false)
+    expect(book.bids.get(100)).toBe(5)
+    expect(book.bids.get(300)).toBe(10)
+
+    expect(book.asks.size).toBe(1)
+    expect(book.asks.has(400)).toBe(false)
+    expect(book.asks.get(500)).toBe(3)
+  })
 })
 
 describe('applyDelta', () => {
@@ -86,6 +105,24 @@ describe('applyDelta', () => {
     // original book should still have old values
     expect(book.bids.get(127.75)).toBe(68.39)
     expect(book.sequence).toBe(185680)
+  })
+
+  it('removes levels with size=0 in delta', () => {
+    const delta: DeltaMessage = {
+      type: 'delta',
+      symbol: 'SOL-PERP',
+      timestamp: Date.now(),
+      sequence: book.sequence + 1,
+      bids: [[127.77, 0]],   // exists in snapshot with size 35.69
+      asks: [[151.38, 0]],   // exists in snapshot with size 16.52
+    }
+
+    const result = applyDelta(book, delta)
+    expect(result.status).toBe('applied')
+    if (result.status !== 'applied') return
+
+    expect(result.book.bids.has(127.77)).toBe(false)
+    expect(result.book.asks.has(151.38)).toBe(false)
   })
 
   it("returns 'stale' when delta sequence ≤ book sequence", () => {
