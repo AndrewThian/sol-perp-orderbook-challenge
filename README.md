@@ -40,4 +40,4 @@ Four hooks (`useSortedBids`, `useSortedAsks`, `useSpread`, `useTotalSizes`) each
 - Negative bid prices and outlier asks (above `OUTLIER_THRESHOLD`) are filtered during selection, keeping the raw cache faithful to server data.
 - `depthRatio` (cumulative size / max cumulative size) is computed per-level so components receive a 0–1 value ready for depth bar rendering without any local calculation.
 
-**Subscription hook refactored to `void`:** With derived hooks as the consumer API, `useOrderBookSubscription` no longer returns a `useQuery` result. Its role is purely side-effectual — start/stop the WebSocket and populate the cache.
+**Connection state via local `useState`:** `useOrderBookSubscription` tracks `status` (`'connecting' | 'connected' | 'disconnected'`) and `retryCount` via local `useState`, driven by `OrderBookSocket`'s `onConnectionChange` callback. This keeps connection awareness in React state without coupling it to the react-query cache.

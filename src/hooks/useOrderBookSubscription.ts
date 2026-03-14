@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   buildBookFromSnapshot,
@@ -10,8 +10,12 @@ import { WS_URL } from '../constants'
 
 export const QUERY_KEY = ['orderbook', 'SOL-PERP'] as const
 
-export function useOrderBookSubscription(): void {
+export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected'
+
+export function useOrderBookSubscription() {
   const queryClient = useQueryClient()
+  const [status, setStatus] = useState<ConnectionStatus>('connecting')
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     const socket = new OrderBookSocket({
@@ -40,8 +44,19 @@ export function useOrderBookSubscription(): void {
           }
         })
       },
+      onConnectionChange: (connected) => {
+        if (connected) {
+          setStatus('connected')
+          setRetryCount(0)
+        } else {
+          setStatus('disconnected')
+          setRetryCount((n) => n + 1)
+        }
+      },
     })
 
     return () => socket.dispose()
   }, [queryClient])
+
+  return { status, retryCount }
 }
