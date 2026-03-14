@@ -1,14 +1,14 @@
-import { ConnectionStatus } from '@/components/ConnectionStatus'
-import { SpreadRow } from '@/components/SpreadRow'
-import './styles/orderbook.css'
+import { useOrderBookSubscription } from './hooks/useOrderBookSubscription'
+import { ConnectionStatus } from './components/ConnectionStatus'
+import { OrderBookPanel } from './components/OrderBookPanel'
 
-function App() {
+export default function App() {
+  const { status } = useOrderBookSubscription()
+
   return (
-    <div className="orderbook-panel">
-      <ConnectionStatus />
-      <SpreadRow />
+    <div className="app">
+      <ConnectionStatus status={status} />
+      <OrderBookPanel />
     </div>
   )
 }
-
-export default App

@@ -1,4 +1,4 @@
-import { useOrderBookSubscription } from '@/hooks/useOrderBookSubscription'
+import type { ConnectionStatus as ConnectionStatusType } from '../hooks/useOrderBookSubscription'
 
 const statusLabels: Record<string, string> = {
   connected: 'Connected',
@@ -6,9 +6,11 @@ const statusLabels: Record<string, string> = {
   disconnected: 'Disconnected',
 }
 
-export function ConnectionStatus() {
-  const { status } = useOrderBookSubscription()
+interface ConnectionStatusProps {
+  status: ConnectionStatusType
+}
 
+export function ConnectionStatus({ status }: ConnectionStatusProps) {
   return (
     <div
       className={`connection-dot connection-dot--${status}`}

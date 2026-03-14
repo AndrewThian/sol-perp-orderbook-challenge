@@ -76,22 +76,42 @@ function addCumulativeDepth(levels: [number, number][]): DisplayLevel[] {
   return withTotals
 }
 
-// ─── React hooks ───
-
-const queryOptions = { queryKey: QUERY_KEY, staleTime: Infinity } as const
-
 export function useSortedBids() {
-  return useQuery({ ...queryOptions, select: selectSortedBids })
+  return useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: () => undefined as unknown as OrderBookData,
+    staleTime: Infinity,
+    enabled: false,
+    select: selectSortedBids,
+  })
 }
 
 export function useSortedAsks() {
-  return useQuery({ ...queryOptions, select: selectSortedAsks })
+  return useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: () => undefined as unknown as OrderBookData,
+    staleTime: Infinity,
+    enabled: false,
+    select: selectSortedAsks,
+  })
 }
 
 export function useSpread() {
-  return useQuery({ ...queryOptions, select: selectSpread })
+  return useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: () => undefined as unknown as OrderBookData,
+    staleTime: Infinity,
+    enabled: false,
+    select: selectSpread,
+  })
 }
 
 export function useTotalSizes() {
-  return useQuery({ ...queryOptions, select: selectTotalSizes })
+  return useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: () => undefined as unknown as OrderBookData,
+    staleTime: Infinity,
+    enabled: false,
+    select: selectTotalSizes,
+  })
 }
