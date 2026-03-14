@@ -143,3 +143,13 @@ Depth visualization uses `transform: scaleX(var(--depth))` on absolutely-positio
 ### Structural sharing via `select`
 
 Derived hooks (`useSortedBids`, `useSortedAsks`, `useSpread`, `useTotalSizes`) use React Query's `select` option. Structural sharing means a component only re-renders when its derived slice actually changes — not on every cache write.
+
+## Future Improvements
+
+### Production-ready WebSocket management
+
+The current `OrderBookSocket` class works well but could be hardened for production:
+
+- **`useRef` for single socket instance** — Store the socket in a `useRef` to guarantee a single connection across React strict-mode double-mounts and fast re-renders, preventing accidental duplicate connections.
+- **Subscription manager** — Introduce a centralized subscription manager that tracks active consumers and reference-counts connections. When the last subscriber unmounts, the manager tears down the socket. When a new subscriber mounts, it reuses the existing connection. This decouples socket lifecycle from component lifecycle.
+- **Extracting socket from React entirely** — Move `OrderBookSocket` into a framework-agnostic singleton (or use React Query's `queryClient` as the owner via a custom `QueryObserver`). This eliminates `useEffect` timing issues and makes the socket testable without rendering components.
