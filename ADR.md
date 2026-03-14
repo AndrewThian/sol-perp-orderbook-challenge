@@ -420,7 +420,7 @@ sol-perp-orderbook-challenge/
 | Wire row flash animation on price changes      | P2       | CSS ready, component wiring needed |
 | Test `useOrderBookSubscription`                | P2       | Integration test with mock socket  |
 | Remove debug `bifurcate` function from App.tsx | P1       | Cleanup                            |
-| Consider `useDeferredValue` for table data     | P2       | Not yet implemented                |
+| Consider `useDeferredValue` for table data     | P2       | Done                               |
 | RAF-based delta batching                       | P3       | Only if profiling shows need       |
 
 ---

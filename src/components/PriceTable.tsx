@@ -1,3 +1,4 @@
+import { useDeferredValue } from 'react'
 import type { DisplayLevel } from '../hooks/useOrderBook'
 import { PriceRow } from './PriceRow'
 
@@ -7,10 +8,12 @@ interface PriceTableProps {
 }
 
 export function PriceTable({ levels, side }: PriceTableProps) {
+  const deferredLevels = useDeferredValue(levels)
   return (
     <div className={`price-table price-table--${side}`}>
-      {levels.map((level) => (
-        <PriceRow key={level.price} {...level} side={side} />
+      {deferredLevels.map((level, i) => (
+        // key to index so react reuses the dom nodes instead of unmounting/mounting
+        <PriceRow key={i} {...level} side={side} />
       ))}
     </div>
   )

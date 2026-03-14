@@ -42,8 +42,15 @@ describe('buildBookFromSnapshot', () => {
   it('excludes size=0 entries from snapshot', () => {
     const snapshotWithZeros = SnapshotMessageSchema.parse({
       ...snapshotSample,
-      bids: [[100, 5], [200, 0], [300, 10]],
-      asks: [[400, 0], [500, 3]],
+      bids: [
+        [100, 5],
+        [200, 0],
+        [300, 10],
+      ],
+      asks: [
+        [400, 0],
+        [500, 3],
+      ],
     })
 
     const book = buildBookFromSnapshot(snapshotWithZeros)
@@ -113,8 +120,8 @@ describe('applyDelta', () => {
       symbol: 'SOL-PERP',
       timestamp: Date.now(),
       sequence: book.sequence + 1,
-      bids: [[127.77, 0]],   // exists in snapshot with size 35.69
-      asks: [[151.38, 0]],   // exists in snapshot with size 16.52
+      bids: [[127.77, 0]], // exists in snapshot with size 35.69
+      asks: [[151.38, 0]], // exists in snapshot with size 16.52
     }
 
     const result = applyDelta(book, delta)

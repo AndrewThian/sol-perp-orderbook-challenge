@@ -1,4 +1,8 @@
-import { useSortedBids, useSortedAsks, useTotalSizes } from '../hooks/useOrderBook'
+import {
+  useSortedBids,
+  useSortedAsks,
+  useTotalSizes,
+} from '../hooks/useOrderBook'
 import { PriceTable } from './PriceTable'
 import { SpreadRow } from './SpreadRow'
 import '../styles/orderbook.css'
