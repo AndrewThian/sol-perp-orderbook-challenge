@@ -21,8 +21,9 @@ export const DeltaMessageSchema = z.object({
     symbol: z.string(),
     timestamp: z.number(),
     sequence: z.number().int(),
-    bids: z.array(PriceLevelSchema),
-    asks: z.array(PriceLevelSchema),
+    // the websocket may provide one side of ask/bid pair only.
+    bids: z.array(PriceLevelSchema).default([]),
+    asks: z.array(PriceLevelSchema).default([]),
 });
 export type DeltaMessage = z.infer<typeof DeltaMessageSchema>;
 
