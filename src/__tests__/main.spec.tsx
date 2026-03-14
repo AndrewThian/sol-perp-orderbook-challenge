@@ -1,9 +1,15 @@
 import { render, screen } from '@testing-library/react'
-import { useQueryClient, QueryClientProvider, QueryClient } from '@tanstack/react-query'
+import {
+  useQueryClient,
+  QueryClientProvider,
+  QueryClient,
+} from '@tanstack/react-query'
 
 function QueryClientSpy() {
   const queryClient = useQueryClient()
-  return <span data-testid="qc-status">{queryClient ? 'connected' : 'missing'}</span>
+  return (
+    <span data-testid="qc-status">{queryClient ? 'connected' : 'missing'}</span>
+  )
 }
 
 describe('main app setup', () => {

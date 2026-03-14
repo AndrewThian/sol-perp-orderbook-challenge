@@ -12,7 +12,7 @@
     "test:ci": "vitest run --coverage",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepush": "tsc --noEmit && eslint . && prettier --check ."
+    "prepush": "tsc --noEmit && eslint . && prettier --write ."
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
