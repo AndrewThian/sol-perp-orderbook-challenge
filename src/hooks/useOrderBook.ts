@@ -13,12 +13,11 @@ export interface DisplayLevel {
 }
 
 export function selectSortedBids(data: OrderBookData): DisplayLevel[] {
-  const filtered = [...data.bids.entries()]
-    .filter(([price]) => price > 0)
+  const sorted = [...data.bids.entries()]
     .sort((a, b) => b[0] - a[0])
     .slice(0, MAX_DISPLAY_LEVELS)
 
-  return addCumulativeDepth(filtered)
+  return padLevels(addCumulativeDepth(sorted))
 }
 
 export function selectSortedAsks(data: OrderBookData): DisplayLevel[] {
@@ -27,20 +26,18 @@ export function selectSortedAsks(data: OrderBookData): DisplayLevel[] {
     .sort((a, b) => a[0] - b[0])
     .slice(0, MAX_DISPLAY_LEVELS)
 
-  return addCumulativeDepth(filtered)
+  return padLevels(addCumulativeDepth(filtered))
 }
 
 export function selectSpread(data: OrderBookData) {
-  const positiveBids = [...data.bids.keys()].filter((p) => p > 0)
-  const validAsks = [...data.asks.keys()].filter(
-    (p) => p > 0 && p < OUTLIER_THRESHOLD,
-  )
+  const allBids = [...data.bids.keys()]
+  const validAsks = [...data.asks.keys()].filter((p) => p < OUTLIER_THRESHOLD)
 
-  if (positiveBids.length === 0 || validAsks.length === 0) {
+  if (allBids.length === 0 || validAsks.length === 0) {
     return { absolute: 0, percentage: 0, bestBid: 0, bestAsk: 0 }
   }
 
-  const bestBid = Math.max(...positiveBids)
+  const bestBid = Math.max(...allBids)
   const bestAsk = Math.min(...validAsks)
   const absolute = bestAsk - bestBid
 
@@ -74,6 +71,17 @@ function addCumulativeDepth(levels: [number, number][]): DisplayLevel[] {
   }
 
   return withTotals
+}
+
+const EMPTY_LEVEL: DisplayLevel = { price: 0, size: 0, total: 0, depthRatio: 0 }
+
+function padLevels(levels: DisplayLevel[]): DisplayLevel[] {
+  if (levels.length >= MAX_DISPLAY_LEVELS) return levels
+  return levels.concat(
+    Array.from({ length: MAX_DISPLAY_LEVELS - levels.length }, () => ({
+      ...EMPTY_LEVEL,
+    })),
+  )
 }
 
 export function useSortedBids() {

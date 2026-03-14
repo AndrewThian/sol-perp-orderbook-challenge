@@ -20,28 +20,29 @@ export function useOrderBookSubscription() {
   useEffect(() => {
     const socket = new OrderBookSocket({
       url: WS_URL,
-      onMessage: (msg) => {
-        if (msg.type === 'snapshot') {
-          queryClient.setQueryData<OrderBookData>(
-            QUERY_KEY,
-            buildBookFromSnapshot(msg),
-          )
-        } else if (msg.type === 'delta') {
-          queryClient.setQueryData<OrderBookData>(QUERY_KEY, (prev) => {
-            if (!prev) return prev
-
-            const result = applyDelta(prev, msg)
-            switch (result.status) {
-              case 'applied':
-                return result.book
-              case 'stale':
-                return prev
-              case 'gap':
-                socket.reconnect()
-                return prev
+      onMessage: (msgs) => {
+        queryClient.setQueryData<OrderBookData>(QUERY_KEY, (prev) => {
+          let book = prev
+          for (const msg of msgs) {
+            if (msg.type === 'snapshot') {
+              book = buildBookFromSnapshot(msg)
+            } else {
+              if (!book) continue
+              const result = applyDelta(book, msg)
+              switch (result.status) {
+                case 'applied':
+                  book = result.book
+                  break
+                case 'stale':
+                  break
+                case 'gap':
+                  socket.reconnect()
+                  return book
+              }
             }
-          })
-        }
+          }
+          return book
+        })
       },
       onConnectionChange: (connected) => {
         if (connected) {

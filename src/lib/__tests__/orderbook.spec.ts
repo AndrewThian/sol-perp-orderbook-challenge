@@ -31,6 +31,14 @@ describe('buildBookFromSnapshot', () => {
     expect(book.asks.get(151.38)).toBe(16.52)
   })
 
+  it('normalizes negative prices to absolute values', () => {
+    const book = buildBookFromSnapshot(snapshot)
+
+    // snapshot has [-120.67, 56.38] — stored as abs(price)
+    expect(book.bids.has(-120.67)).toBe(false)
+    expect(book.bids.get(120.67)).toBe(56.38)
+  })
+
   it('copies sequence, symbol, and timestamp', () => {
     const book = buildBookFromSnapshot(snapshot)
 
@@ -95,10 +103,10 @@ describe('applyDelta', () => {
     expect(result.status).toBe('applied')
     if (result.status !== 'applied') return
 
-    // delta-2 sets bid [-121.21..] size=0 → should be removed
-    expect(result.book.bids.has(delta2.bids[0][0])).toBe(false)
-    // delta-2 updates bid [-120.67] from 56.38 → 105.36
-    expect(result.book.bids.get(delta2.bids[1][0])).toBe(105.36)
+    // delta-2 sets bid [-121.21..] size=0 → should be removed (stored as abs)
+    expect(result.book.bids.has(Math.abs(delta2.bids[0][0]))).toBe(false)
+    // delta-2 updates bid [-120.67] from 56.38 → 105.36 (stored as abs)
+    expect(result.book.bids.get(Math.abs(delta2.bids[1][0]))).toBe(105.36)
     // delta-2 adds new bid level 127.66
     expect(result.book.bids.get(127.66)).toBe(57.59)
 

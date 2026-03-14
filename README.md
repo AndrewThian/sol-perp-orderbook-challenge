@@ -37,7 +37,20 @@ Four hooks (`useSortedBids`, `useSortedAsks`, `useSpread`, `useTotalSizes`) each
 
 **Filtering and depth computation happen in `select`, not on ingest:**
 
-- Negative bid prices and outlier asks (above `OUTLIER_THRESHOLD`) are filtered during selection, keeping the raw cache faithful to server data.
+- Outlier asks (above `OUTLIER_THRESHOLD`) are filtered during selection, keeping the raw cache faithful to server data.
 - `depthRatio` (cumulative size / max cumulative size) is computed per-level so components receive a 0–1 value ready for depth bar rendering without any local calculation.
+
+### Negative prices as directional encoding
+
+The WebSocket server sends some bid price levels as negative numbers (e.g. `[-121.26, 175.22]`). Analysis of the data shows these are not invalid — they receive active delta updates (size changes, additions, removals) just like positive-price levels.
+
+We interpret the sign as a **directional encoding** for the perpetual futures market:
+
+- **Positive price** = long-side liquidity (standard bid to open a long position)
+- **Negative price** = short-side liquidity (bid to buy-to-close a short position)
+
+The actual price level is `Math.abs(price)` in both cases. Normalization happens at the ingest boundary (`applyLevels` in `src/lib/orderbook.ts`) so the rest of the stack — Maps, selectors, components — only ever sees positive prices. This is a single code path shared by both `buildBookFromSnapshot` and `applyDelta`.
+
+Without server documentation this is our best interpretation of the data. If the encoding turns out to mean something different, the fix is isolated to `applyLevels`.
 
 **Connection state via local `useState`:** `useOrderBookSubscription` tracks `status` (`'connecting' | 'connected' | 'disconnected'`) and `retryCount` via local `useState`, driven by `OrderBookSocket`'s `onConnectionChange` callback. This keeps connection awareness in React state without coupling it to the react-query cache.

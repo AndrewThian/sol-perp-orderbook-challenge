@@ -2,7 +2,7 @@ import { ServerMessageSchema, type ServerMessage } from '@/schemas/orderbook'
 
 export interface OrderBookSocketOptions {
   url: string
-  onMessage: (msg: ServerMessage) => void
+  onMessage: (msgs: ServerMessage[]) => void
   onConnectionChange?: (connected: boolean) => void
 }
 
@@ -12,6 +12,8 @@ export class OrderBookSocket {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private attempt = 0
   private disposed = false
+  private queue: ServerMessage[] = []
+  private rafId: number | null = null
 
   constructor(options: OrderBookSocketOptions) {
     this.options = options
@@ -50,7 +52,16 @@ export class OrderBookSocket {
     const parsed = ServerMessageSchema.safeParse(data)
     if (!parsed.success) return
 
-    this.options.onMessage(parsed.data)
+    this.queue.push(parsed.data)
+    this.scheduleFlush()
+  }
+
+  private scheduleFlush() {
+    if (this.rafId != null) return
+    this.rafId = requestAnimationFrame(() => {
+      this.rafId = null
+      this.options.onMessage(this.queue.splice(0))
+    })
   }
 
   private scheduleReconnect() {
@@ -66,6 +77,10 @@ export class OrderBookSocket {
 
   dispose() {
     this.disposed = true
+    if (this.rafId != null) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    }
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer)
       this.reconnectTimer = null

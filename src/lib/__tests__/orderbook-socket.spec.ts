@@ -20,6 +20,12 @@ beforeEach(() => {
   vi.useFakeTimers()
   mockInstances = []
   vi.stubGlobal('WebSocket', MockWebSocket)
+  vi.stubGlobal(
+    'requestAnimationFrame',
+    (cb: FrameRequestCallback) =>
+      setTimeout(() => cb(0), 0) as unknown as number,
+  )
+  vi.stubGlobal('cancelAnimationFrame', (id: number) => clearTimeout(id))
 })
 
 afterEach(() => {
@@ -67,7 +73,8 @@ describe('OrderBookSocket', () => {
       asks: [[101, 5]],
     }
     ws.onmessage!({ data: JSON.stringify(snapshot) })
-    expect(onMessage).toHaveBeenCalledWith(snapshot)
+    vi.advanceTimersToNextTimer()
+    expect(onMessage).toHaveBeenCalledWith([snapshot])
   })
 
   it('parses and dispatches valid delta messages', () => {
@@ -84,13 +91,15 @@ describe('OrderBookSocket', () => {
       asks: [],
     }
     ws.onmessage!({ data: JSON.stringify(delta) })
-    expect(onMessage).toHaveBeenCalledWith(delta)
+    vi.advanceTimersToNextTimer()
+    expect(onMessage).toHaveBeenCalledWith([delta])
   })
 
   it('ignores invalid JSON', () => {
     const onMessage = vi.fn()
     createSocket({ onMessage })
     mockInstances[0].onmessage!({ data: 'not json' })
+    vi.advanceTimersToNextTimer()
     expect(onMessage).not.toHaveBeenCalled()
   })
 
@@ -98,7 +107,40 @@ describe('OrderBookSocket', () => {
     const onMessage = vi.fn()
     createSocket({ onMessage })
     mockInstances[0].onmessage!({ data: JSON.stringify({ type: 'unknown' }) })
+    vi.advanceTimersToNextTimer()
     expect(onMessage).not.toHaveBeenCalled()
+  })
+
+  it('batches multiple messages into a single onMessage call', () => {
+    const onMessage = vi.fn()
+    createSocket({ onMessage })
+    const ws = mockInstances[0]
+    ws.onopen!()
+
+    const snapshot = {
+      type: 'snapshot',
+      symbol: 'SOL-PERP',
+      timestamp: 1000,
+      sequence: 1,
+      bids: [[100, 10]],
+      asks: [[101, 5]],
+    }
+    const delta = {
+      type: 'delta',
+      symbol: 'SOL-PERP',
+      timestamp: 1001,
+      sequence: 2,
+      bids: [[100, 12]],
+      asks: [],
+    }
+
+    ws.onmessage!({ data: JSON.stringify(snapshot) })
+    ws.onmessage!({ data: JSON.stringify(delta) })
+    expect(onMessage).not.toHaveBeenCalled()
+
+    vi.advanceTimersToNextTimer()
+    expect(onMessage).toHaveBeenCalledTimes(1)
+    expect(onMessage).toHaveBeenCalledWith([snapshot, delta])
   })
 
   it('reconnects on close with exponential backoff', () => {

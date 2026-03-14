@@ -14,7 +14,6 @@ function makeBook(overrides?: Partial<OrderBookData>): OrderBookData {
       [110, 10],
       [109, 20],
       [108, 30],
-      [-500, 5], // negative — should be filtered
     ]),
     asks: new Map([
       [111, 15],
@@ -35,12 +34,6 @@ describe('selectSortedBids', () => {
     expect(bids[0].price).toBe(110)
     expect(bids[1].price).toBe(109)
     expect(bids[2].price).toBe(108)
-  })
-
-  it('filters out negative prices', () => {
-    const bids = selectSortedBids(makeBook())
-    const prices = bids.map((b) => b.price)
-    expect(prices).not.toContain(-500)
   })
 
   it('computes cumulative totals', () => {
@@ -64,9 +57,10 @@ describe('selectSortedBids', () => {
     expect(bids[2].size).toBe(30)
   })
 
-  it('returns empty array for empty bids', () => {
+  it('returns padded empty levels for empty bids', () => {
     const bids = selectSortedBids(makeBook({ bids: new Map() }))
-    expect(bids).toEqual([])
+    expect(bids).toHaveLength(MAX_DISPLAY_LEVELS)
+    expect(bids.every((b) => b.price === 0 && b.size === 0)).toBe(true)
   })
 
   it('caps at MAX_DISPLAY_LEVELS', () => {
@@ -78,16 +72,21 @@ describe('selectSortedBids', () => {
     expect(selectSortedBids(book).length).toBe(MAX_DISPLAY_LEVELS)
   })
 
-  it('returns all levels when fewer than MAX_DISPLAY_LEVELS', () => {
+  it('pads to MAX_DISPLAY_LEVELS when fewer levels exist', () => {
     const bids = selectSortedBids(makeBook())
-    expect(bids.length).toBe(3) // 3 valid prices after filtering negative
+    expect(bids.length).toBe(MAX_DISPLAY_LEVELS)
+    // first 3 are real levels, rest are empty padding
+    expect(bids[0].price).toBe(110)
+    expect(bids[2].price).toBe(108)
+    expect(bids[3]).toEqual({ price: 0, size: 0, total: 0, depthRatio: 0 })
   })
 
-  it('handles single bid', () => {
+  it('handles single bid (padded to MAX_DISPLAY_LEVELS)', () => {
     const book = makeBook({ bids: new Map([[50, 7]]) })
     const bids = selectSortedBids(book)
-    expect(bids).toHaveLength(1)
+    expect(bids).toHaveLength(MAX_DISPLAY_LEVELS)
     expect(bids[0]).toEqual({ price: 50, size: 7, total: 7, depthRatio: 1 })
+    expect(bids[1]).toEqual({ price: 0, size: 0, total: 0, depthRatio: 0 })
   })
 })
 
@@ -126,9 +125,10 @@ describe('selectSortedAsks', () => {
     expect(asks[2].size).toBe(35)
   })
 
-  it('returns empty array for empty asks', () => {
+  it('returns padded empty levels for empty asks', () => {
     const asks = selectSortedAsks(makeBook({ asks: new Map() }))
-    expect(asks).toEqual([])
+    expect(asks).toHaveLength(MAX_DISPLAY_LEVELS)
+    expect(asks.every((a) => a.price === 0 && a.size === 0)).toBe(true)
   })
 
   it('caps at MAX_DISPLAY_LEVELS', () => {
@@ -140,11 +140,12 @@ describe('selectSortedAsks', () => {
     expect(selectSortedAsks(book).length).toBe(MAX_DISPLAY_LEVELS)
   })
 
-  it('handles single ask', () => {
+  it('handles single ask (padded to MAX_DISPLAY_LEVELS)', () => {
     const book = makeBook({ asks: new Map([[200, 12]]) })
     const asks = selectSortedAsks(book)
-    expect(asks).toHaveLength(1)
+    expect(asks).toHaveLength(MAX_DISPLAY_LEVELS)
     expect(asks[0]).toEqual({ price: 200, size: 12, total: 12, depthRatio: 1 })
+    expect(asks[1]).toEqual({ price: 0, size: 0, total: 0, depthRatio: 0 })
   })
 
   it('keeps prices just below OUTLIER_THRESHOLD', () => {
@@ -160,7 +161,8 @@ describe('selectSortedAsks', () => {
       asks: new Map([[OUTLIER_THRESHOLD, 5]]),
     })
     const asks = selectSortedAsks(book)
-    expect(asks).toEqual([])
+    expect(asks).toHaveLength(MAX_DISPLAY_LEVELS)
+    expect(asks.every((a) => a.price === 0 && a.size === 0)).toBe(true)
   })
 })
 
@@ -181,15 +183,15 @@ describe('selectSpread', () => {
     expect(spread.bestAsk).toBe(111)
   })
 
-  it('ignores negative bid prices for best bid', () => {
+  it('uses highest bid price for best bid', () => {
     const book = makeBook({
       bids: new Map([
-        [-500, 100],
+        [500, 100],
         [50, 10],
       ]),
     })
     const spread = selectSpread(book)
-    expect(spread.bestBid).toBe(50)
+    expect(spread.bestBid).toBe(500)
   })
 
   it('ignores outlier asks for best ask', () => {
@@ -203,8 +205,8 @@ describe('selectSpread', () => {
     expect(spread.bestAsk).toBe(115)
   })
 
-  it('returns zeros when no valid bids', () => {
-    const book = makeBook({ bids: new Map([[-100, 5]]) })
+  it('returns zeros when no bids', () => {
+    const book = makeBook({ bids: new Map() })
     const spread = selectSpread(book)
     expect(spread.absolute).toBe(0)
     expect(spread.percentage).toBe(0)
@@ -246,9 +248,9 @@ describe('selectSpread', () => {
 })
 
 describe('selectTotalSizes', () => {
-  it('sums all bid sizes (including negative price entries)', () => {
+  it('sums all bid sizes', () => {
     const { totalBidSize } = selectTotalSizes(makeBook())
-    expect(totalBidSize).toBe(10 + 20 + 30 + 5) // includes negative price's size
+    expect(totalBidSize).toBe(10 + 20 + 30)
   })
 
   it('sums all ask sizes (including outlier entries)', () => {

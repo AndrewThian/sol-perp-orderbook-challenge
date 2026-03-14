@@ -11,13 +11,13 @@ function applyLevels(
   // needs to immutable because react query uses shallow equal to detect changes
   const next = new Map(book)
   for (const [price, size] of levels) {
-    if (size === 0) next.delete(price)
-    else next.set(price, size)
+    const absPrice = Math.abs(price)
+    if (size === 0) next.delete(absPrice)
+    else next.set(absPrice, size)
   }
   return next
 }
 
-// data layer exports
 export interface OrderBookData {
   bids: Map<number, number> // price → size
   asks: Map<number, number> // price → size
@@ -28,8 +28,8 @@ export interface OrderBookData {
 
 export function buildBookFromSnapshot(msg: SnapshotMessage): OrderBookData {
   return {
-    bids: new Map(msg.bids.filter(([, size]) => size !== 0)),
-    asks: new Map(msg.asks.filter(([, size]) => size !== 0)),
+    bids: applyLevels(new Map(), msg.bids),
+    asks: applyLevels(new Map(), msg.asks),
     sequence: msg.sequence,
     symbol: msg.symbol,
     lastUpdated: msg.timestamp,
@@ -41,7 +41,6 @@ export type DeltaResult =
   | { status: 'stale' }
   | { status: 'gap' }
 
-// enriches with so we can perform filtering later
 export function applyDelta(
   prev: OrderBookData,
   msg: DeltaMessage,

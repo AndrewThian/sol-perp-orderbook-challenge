@@ -89,7 +89,7 @@
 }
 
 .depth-bar--ask {
-  transform-origin: left;
+  transform-origin: right;
   background: rgba(239, 68, 68, 0.15);
 }
 
