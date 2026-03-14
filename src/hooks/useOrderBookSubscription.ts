@@ -26,23 +26,22 @@ export function useOrderBookSubscription() {
             QUERY_KEY,
             buildBookFromSnapshot(msg),
           )
-          return
+        } else if (msg.type === 'delta') {
+          queryClient.setQueryData<OrderBookData>(QUERY_KEY, (prev) => {
+            if (!prev) return prev
+
+            const result = applyDelta(prev, msg)
+            switch (result.status) {
+              case 'applied':
+                return result.book
+              case 'stale':
+                return prev
+              case 'gap':
+                socket.reconnect()
+                return prev
+            }
+          })
         }
-
-        queryClient.setQueryData<OrderBookData>(QUERY_KEY, (prev) => {
-          if (!prev) return prev
-
-          const result = applyDelta(prev, msg)
-          switch (result.status) {
-            case 'applied':
-              return result.book
-            case 'stale':
-              return prev
-            case 'gap':
-              socket.reconnect()
-              return prev
-          }
-        })
       },
       onConnectionChange: (connected) => {
         if (connected) {
