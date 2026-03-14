@@ -1,4 +1,67 @@
-# Sol Perp Orderbook
+# SOL-PERP Order Book
+
+Real-time perpetual futures order book viewer for SOL-PERP, built with React 19, TypeScript, and WebSockets.
+
+## Quick Start
+
+```sh
+npm install
+npm run dev
+```
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start Vite dev server with HMR |
+| `npm run build` | Production build |
+| `npm run preview` | Serve production build locally |
+| `npm test` | Run Vitest in watch mode |
+| `npm run test:ci` | Single run with coverage |
+| `npm run prepush` | Typecheck + lint + format |
+
+## Architecture
+
+### Data flow
+
+```
+WebSocket
+  → OrderBookSocket (reconnect, exponential backoff)
+    → RAF batch (queues messages, flushes once per animation frame)
+      → Zod safeParse (validate/discard malformed)
+        → bookRef (mutable Map, apply snapshot/delta with sequence tracking)
+          → time-based throttle (setInterval flush, configurable 0–1000ms)
+            → queryClient.setQueryData()
+              → useQuery({ select }) derived hooks
+                → Component
+```
+
+### Key decisions
+
+- **OrderBookSocket class** — Encapsulates WebSocket lifecycle: auto-reconnect with exponential backoff (capped at 30s), RAF-batched message dispatch, Zod validation at the boundary. Pure TypeScript, no React dependency.
+- **React Query as single state layer** — The order book is server-owned data with no application-level state. React Query holds the materialised book in its cache. Derived views (sorted bids, spread, totals) use `select` transforms with structural sharing.
+- **Two-tier throttle** — RAF batching (socket layer) coalesces raw WebSocket messages. Time-based throttle (hook layer) controls React render frequency. Deltas always apply to a mutable ref immediately — no data loss, just fewer renders.
+- **`Map<number, number>` for the book** — Deltas update individual price levels. Map gives O(1) updates; sorting is deferred to the render boundary via `select`.
+- **Compositor-only CSS** — Depth bars use `transform: scaleX()` instead of width to avoid triggering layout/paint. Update flashes use opacity. Both run on the GPU compositor thread.
+
+### Project structure
+
+```
+src/
+  schemas/        # Zod schemas — single source of truth for types
+  lib/            # Pure TS — OrderBookData, apply functions, socket (no React)
+  hooks/          # React Query subscription + select-based derived hooks
+  components/     # React components — OrderBookPanel, PriceRow, SpreadRow
+  components/ui/  # shadcn/ui primitives — Card, Badge, ToggleGroup
+  styles/         # CSS — depth bar transforms, flash animations
+```
+
+## Tech Stack
+
+- React 19 + TypeScript
+- Vite 7 (bundler)
+- TanStack React Query (server state)
+- Zod v4 (runtime validation)
+- Tailwind CSS v4 + shadcn/ui (styling)
+- Vitest (tests)
 
 ## Design Decisions
 
@@ -59,11 +122,11 @@ Without server documentation this is our best interpretation of the data. If the
 
 ### RAF-batched message processing
 
-WebSocket deltas arrive at high frequency. Rather than triggering a React render per message, `OrderBookSocket` queues incoming messages and flushes the entire batch once per animation frame via `requestAnimationFrame`. A guard (`if (this.rafId != null) return`) prevents duplicate scheduling, so at most oneflush runs per frame regardless of message volume.
+WebSocket deltas arrive at high frequency. Rather than triggering a React render per message, `OrderBookSocket` queues incoming messages and flushes the entire batch once per animation frame via `requestAnimationFrame`. A guard (`if (this.rafId != null) return`) prevents duplicate scheduling, so at most one flush runs per frame regardless of message volume.
 
 ### Fixed-position keys to prevent reflows
 
-`PriceTable` keys rows by array index (`key={i}`) rather than by price. Because the level arrays are always padded to `MAX_DISPLAY_LEVELS`, each index maps to a stable DOM node. React updates props in place instead of unmounting/remounting rows when prices shift, eliminating layout reflows from changing DOMorder.
+`PriceTable` keys rows by array index (`key={i}`) rather than by price. Because the level arrays are always padded to `MAX_DISPLAY_LEVELS`, each index maps to a stable DOM node. React updates props in place instead of unmounting/remounting rows when prices shift, eliminating layout reflows from changing DOM order.
 
 ### `useDeferredValue` for render priority
 
