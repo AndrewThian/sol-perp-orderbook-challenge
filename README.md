@@ -54,3 +54,29 @@ The actual price level is `Math.abs(price)` in both cases. Normalization happens
 Without server documentation this is our best interpretation of the data. If the encoding turns out to mean something different, the fix is isolated to `applyLevels`.
 
 **Connection state via local `useState`:** `useOrderBookSubscription` tracks `status` (`'connecting' | 'connected' | 'disconnected'`) and `retryCount` via local `useState`, driven by `OrderBookSocket`'s `onConnectionChange` callback. This keeps connection awareness in React state without coupling it to the react-query cache.
+
+## Performance
+
+### RAF-batched message processing
+
+WebSocket deltas arrive at high frequency. Rather than triggering a React render per message, `OrderBookSocket` queues incoming messages and flushes the entire batch once per animation frame via `requestAnimationFrame`. A guard (`if (this.rafId != null) return`) prevents duplicate scheduling, so at most oneflush runs per frame regardless of message volume.
+
+### Fixed-position keys to prevent reflows
+
+`PriceTable` keys rows by array index (`key={i}`) rather than by price. Because the level arrays are always padded to `MAX_DISPLAY_LEVELS`, each index maps to a stable DOM node. React updates props in place instead of unmounting/remounting rows when prices shift, eliminating layout reflows from changing DOMorder.
+
+### `useDeferredValue` for render priority
+
+`PriceTable` wraps its `levels` prop in `useDeferredValue`, allowing React to defer re-rendering the price grid during bursts of rapid cache updates and keep higher-priority interactions responsive.
+
+### Compositor-only depth bars
+
+Depth visualization uses `transform: scaleX(var(--depth))` on absolutely-positioned pseudo-elements with `will-change: transform`. This confines updates to the compositor thread — no layout or paint — so 40 depth bars can update simultaneously without main-thread cost.
+
+### `React.memo` with primitive props
+
+`PriceRow` is wrapped in `React.memo`. All props are primitives (numbers, strings), making shallow comparison cheap and skipping re-renders for unchanged rows.
+
+### Structural sharing via `select`
+
+Derived hooks (`useSortedBids`, `useSortedAsks`, `useSpread`, `useTotalSizes`) use React Query's `select` option. Structural sharing means a component only re-renders when its derived slice actually changes — not on every cache write.

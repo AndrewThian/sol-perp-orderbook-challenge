@@ -23,11 +23,15 @@ export const PriceRow = React.memo(function PriceRow({
       style={{ '--depth': depthRatio } as React.CSSProperties}
     >
       <div className={`depth-bar depth-bar--${side}`} />
-      <span className={`price--${side}`}>
+      <span className={side === 'bid' ? 'text-emerald-500' : 'text-red-500'}>
         {isEmpty ? '' : price.toFixed(2)}
       </span>
-      <span className="size-text">{isEmpty ? '' : size.toFixed(2)}</span>
-      <span className="total-text">{isEmpty ? '' : total.toFixed(2)}</span>
+      <span className="text-right text-[#e6edf3]">
+        {isEmpty ? '' : size.toFixed(2)}
+      </span>
+      <span className="text-right text-muted-foreground">
+        {isEmpty ? '' : total.toFixed(2)}
+      </span>
     </div>
   )
 })

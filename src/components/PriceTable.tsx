@@ -10,7 +10,9 @@ interface PriceTableProps {
 export function PriceTable({ levels, side }: PriceTableProps) {
   const deferredLevels = useDeferredValue(levels)
   return (
-    <div className={`price-table price-table--${side}`}>
+    <div
+      className={`flex overflow-y-auto ${side === 'ask' ? 'flex-col-reverse' : 'flex-col'}`}
+    >
       {deferredLevels.map((level, i) => (
         // key to index so react reuses the dom nodes instead of unmounting/mounting
         <PriceRow key={i} {...level} side={side} />
