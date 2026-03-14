@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   buildBookFromSnapshot,
   applyDelta,
@@ -10,7 +10,7 @@ import { WS_URL } from '../constants'
 
 export const QUERY_KEY = ['orderbook', 'SOL-PERP'] as const
 
-export function useOrderBookSubscription() {
+export function useOrderBookSubscription(): void {
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -44,12 +44,4 @@ export function useOrderBookSubscription() {
 
     return () => socket.dispose()
   }, [queryClient])
-
-  return useQuery<OrderBookData>({
-    queryKey: QUERY_KEY,
-    queryFn: () => new Promise<OrderBookData>(() => {}),
-    enabled: false,
-    staleTime: Infinity,
-    gcTime: Infinity,
-  })
 }
