@@ -6,7 +6,7 @@
   height: 100%;
   overflow: hidden;
   background: #0d1117;
-  border-radius: 8px;
+
 }
 
 .orderbook-header {
@@ -131,4 +131,39 @@
 .total-text {
   text-align: right;
   color: #8b949e;
+}
+
+/* ─── Connection status dot ─── */
+
+.connection-dot {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  z-index: 50;
+  animation: dot-pulse 1.5s ease-in-out infinite;
+}
+
+.connection-dot--connected {
+  background-color: #10b981;
+}
+
+.connection-dot--connecting {
+  background-color: #eab308;
+}
+
+.connection-dot--disconnected {
+  background-color: #ef4444;
+}
+
+@keyframes dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
